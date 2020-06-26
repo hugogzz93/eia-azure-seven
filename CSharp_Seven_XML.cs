@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Xml;
 using System.Threading.Tasks;
 using System.Data.SqlClient;
 using Microsoft.AspNetCore.Mvc;
@@ -30,18 +31,18 @@ namespace EIA.SEVEN_XML
                     log.LogInformation(connString);
                     conn.Open();
                     log.LogInformation("Connected");
-                    var text = "select id, name from Person";
+                    var text = "exec GET_PEOPLE_XML";
 
                     using (SqlCommand cmd = new SqlCommand(text, conn))
                     {
                         log.LogInformation("Querying");
-                        var reader = await cmd.ExecuteReaderAsync();
-                        while (reader.Read()) {
-                            log.LogInformation(String.Format("id: {0}, name: {1}",
-                                reader[0], reader[1]));
-                        }
-                        log.LogInformation("Querying");
 
+                    XmlReader reader = await cmd.ExecuteXmlReaderAsync();
+                        while(reader.Read()) {
+                            log.LogInformation(String.Format("Name: {0}, Id: {1}", reader.GetAttribute("name"), reader.GetAttribute("id")));
+                        }
+
+                        reader.Close();
                     }
                     conn.Close();
                     return new OkObjectResult("All Good!");
